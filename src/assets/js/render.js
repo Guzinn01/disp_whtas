@@ -102,7 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             logMessage(`Iniciando disparo para ${contacts.length} contatos.`, 'info');
             for (const contact of contacts) {
-                const personalizedMessage = message.replace(/{nome}/gi, contact.name);
+
+                // ****** ESTA É A LINHA QUE FOI ALTERADA ******
+                // Agora, ela substitui tanto {nome} quanto {name} pelo nome do contato.
+                const personalizedMessage = message.replace(/{nome}/gi, contact.name).replace(/{name}/gi, contact.name);
+
                 logMessage(`Enviando para ${contact.name} (${contact.phone})...`, 'info');
                 const sendResult = await window.electronAPI.sendWhatsappMessage({ number: contact.phone, message: personalizedMessage });
                 if (sendResult.success) {
