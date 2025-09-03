@@ -140,3 +140,5 @@ vite.config.ts.timestamp-*
 
 .wwebjs_auth
 .wwebjs_cache
+
+data/

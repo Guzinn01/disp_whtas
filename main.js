@@ -1,17 +1,31 @@
-// main.js
-
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const xlsx = require('xlsx');
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+
 const { initialize, sendMessage, logout } = require('./src/whats');
 
 let mainWindow;
 let isWhatsappConnected = false;
+let db;
 
-// O banco de dados ainda está aqui, pronto para quando voltarmos a ele.
-const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
+// --- CAMINHO DO BANCO DE DADOS ALTERADO ---
+// Agora ele salvará o arquivo dentro da pasta 'src/data' do seu projeto.
+const dbPath = path.join(__dirname, 'src', 'data', 'database.sqlite');
+
+async function openDb() {
+    try {
+        db = await open({
+            filename: dbPath,
+            driver: sqlite3.Database
+        });
+        console.log(`[DB] Conexão com o banco de dados estabelecida em: ${dbPath}`);
+        await db.exec('CREATE TABLE IF NOT EXISTS contacts (name TEXT, phone TEXT, status TEXT)');
+    } catch (error) {
+        console.error('[DB] Erro ao conectar com o banco de dados:', error);
+    }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -23,127 +37,95 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js')
         }
     });
-
-    // --- LINHAS ADICIONADAS PARA DEBUG ---
-    // Força a limpeza do cache antes de carregar a página
-    mainWindow.webContents.session.clearCache(() => {
-        console.log('Cache limpo.');
-    });
-    // Abre as ferramentas de desenvolvedor (console) automaticamente
-    mainWindow.webContents.openDevTools();
-    // --- FIM DAS LINHAS ADICIONADAS ---
-
     mainWindow.loadFile(path.join(__dirname, 'src/index.html'));
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    await openDb();
     createWindow();
 
-    app.on('activate', function () {
+    app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 
-    // Lógica para ler e preparar a planilha
-    ipcMain.handle('read-and-prepare-excel', async (event, filePath) => {
+    // O restante do código permanece o mesmo
+    ipcMain.handle('prepare-and-read-excel', async () => {
         try {
-            const workbook = xlsx.readFile(filePath);
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = xlsx.utils.sheet_to_json(worksheet);
-
-            const preparedData = jsonData.map(row => {
-                if (row.telefone) {
-                    row.telefone = String(row.telefone).replace(/\s/g, '');
-                }
-                if (!row.status || row.status === '') {
-                    row.status = 'Pendente';
-                }
-                return row;
+            const result = await dialog.showOpenDialog(mainWindow, {
+                properties: ['openFile'],
+                filters: [{ name: 'Planilhas', extensions: ['xlsx', 'xls'] }]
             });
 
-            const newWorksheet = xlsx.utils.json_to_sheet(preparedData);
-            const newWorkbook = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, sheetName);
+            if (result.canceled) return { success: false, error: 'Nenhum arquivo selecionado.' };
 
-            xlsx.writeFile(newWorkbook, filePath);
-
-            return { success: true, data: preparedData };
-
-        } catch (error) {
-            console.error('Erro ao preparar o arquivo Excel:', error);
-            return { success: false, error: error.message };
-        }
-    });
-
-    // Lógica para atualizar o status do envio
-    ipcMain.handle('update-status', async (event, { filePath, telefone, status }) => {
-        try {
+            const filePath = result.filePaths[0];
             const workbook = xlsx.readFile(filePath);
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
-            const rowIndex = jsonData.findIndex(row => String(row.telefone).replace(/\s/g, '') === String(telefone).replace(/\s/g, ''));
+            await db.exec('DROP TABLE IF EXISTS contacts');
+            await db.exec('CREATE TABLE contacts (name TEXT, phone TEXT, status TEXT)');
 
-            if (rowIndex !== -1) {
-                jsonData[rowIndex].status = status;
-
-                const newWorksheet = xlsx.utils.json_to_sheet(jsonData);
-                const newWorkbook = xlsx.utils.book_new();
-                xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, sheetName);
-                xlsx.writeFile(newWorkbook, filePath);
-                return { success: true };
+            const stmt = await db.prepare('INSERT INTO contacts (name, phone, status) VALUES (?, ?, ?)');
+            for (const row of jsonData) {
+                if (row.Nome && row.Telefone) {
+                    const sanitizedPhone = String(row.Telefone).replace(/\D/g, '');
+                    await stmt.run(row.Nome, sanitizedPhone, 'Preparado');
+                }
             }
+            await stmt.finalize();
 
-            return { success: false, error: 'Número de telefone não encontrado.' };
-
+            console.log(`[DB] Gravação de ${jsonData.length} contatos concluída.`);
+            return { success: true, message: `${jsonData.length} contatos carregados para o banco de dados.` };
         } catch (error) {
-            console.error('Erro ao atualizar o status:', error);
+            console.error('Erro no processo de preparação do arquivo:', error);
             return { success: false, error: error.message };
         }
     });
 
-    // Lógica para iniciar a conexão com o WhatsApp
-    ipcMain.handle('connect-whatsapp', async (event) => {
+    ipcMain.handle('get-contacts-from-db', async () => {
+        try {
+            const rows = await db.all("SELECT name, phone, status FROM contacts WHERE status = 'Preparado'");
+            return rows;
+        } catch (error) {
+            console.error('Erro ao buscar contatos do DB:', error);
+            return [];
+        }
+    });
+
+    ipcMain.handle('update-status', async (event, { phone, status }) => {
+        try {
+            await db.run('UPDATE contacts SET status = ? WHERE phone = ?', [status, phone]);
+            return { success: true };
+        } catch (error) {
+            console.error('Erro ao atualizar status no DB:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
+    // Handlers do WhatsApp
+    ipcMain.handle('connect-whatsapp', async () => {
         return new Promise((resolve) => {
             initialize(
-                (qrCode) => {
-                    mainWindow.webContents.send('qr-code', qrCode);
-                    mainWindow.webContents.send('connection-status', 'Conectando...');
-                },
-                () => {
-                    isWhatsappConnected = true;
-                    mainWindow.webContents.send('connection-status', 'Conectado');
-                    resolve({ success: true });
-                },
-                () => {
-                    isWhatsappConnected = false;
-                    mainWindow.webContents.send('connection-status', 'Desconectado');
-                }
+                (qrCode) => { mainWindow.webContents.send('qr-code', qrCode); mainWindow.webContents.send('connection-status', 'Conectando...'); },
+                () => { isWhatsappConnected = true; mainWindow.webContents.send('connection-status', 'Conectado'); resolve({ success: true }); },
+                () => { isWhatsappConnected = false; mainWindow.webContents.send('connection-status', 'Desconectado'); }
             );
         });
     });
-
-    // Lógica para desconectar o WhatsApp
     ipcMain.handle('disconnect-whatsapp', async () => {
         const result = await logout();
-        if (result.success) {
-            mainWindow.webContents.send('connection-status', 'Desconectado');
-        }
+        if (result.success) { mainWindow.webContents.send('connection-status', 'Desconectado'); }
         return result;
     });
-
-    // Lógica para enviar a mensagem
     ipcMain.handle('send-whatsapp-message', async (event, { number, message }) => {
-        if (!isWhatsappConnected) {
-            return { success: false, error: 'Não há conexão com o WhatsApp.' };
-        }
+        if (!isWhatsappConnected) { return { success: false, error: 'Não há conexão com o WhatsApp.' }; }
         const result = await sendMessage(number, message);
         return result;
     });
-
 });
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
