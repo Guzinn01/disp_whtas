@@ -2,18 +2,18 @@
 <html lang="pt-br">
 
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' 'unsafe-inline';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Disparador de WhatsApp</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- O caminho correto para o CSS é ../assets/css/style.css -->
+    <link rel="stylesheet" href="../src/assets/css/style.css">
 </head>
 
 <body>
-
     <main class="container">
-
         <header>
-            <h1>Disparador de WhatsApp em Massa</h1>
+            <h1>Disparador de WhatsApp</h1>
         </header>
 
         <section id="connection-area">
@@ -23,6 +23,10 @@
             </div>
             <button id="connect-btn">Conectar</button>
             <button id="disconnect-btn" disabled>Desconectar</button>
+            <div id="qr-code-container">
+                <p id="qr-status-message"></p>
+                <img id="qr-code-image" src="" alt="QR Code para conectar ao WhatsApp" class="hidden">
+            </div>
         </section>
 
         <section id="configuration-area">
@@ -56,7 +60,17 @@
 
     </main>
 
-    <script src="assets/js/renderer.js"></script>
+    <!-- Estrutura do Modal Personalizado -->
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <button id="modal-close-btn">OK</button>
+        </div>
+    </div>
+
+    <!-- O caminho correto para o JS é ../assets/js/renderer.js -->
+    <script src="../src/assets/js/renderer.js"></script>
 </body>
 
 </html>

@@ -3,8 +3,10 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const xlsx = require('xlsx');
+const { initialize, sendMessage, logout } = require('./src/whats');
 
 let mainWindow;
+let isWhatsappConnected = false;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -13,7 +15,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'src/preload.js')
+            preload: path.join(__dirname, 'preload.js')
         }
     });
     mainWindow.loadFile(path.join(__dirname, 'src/index.html'));
@@ -26,6 +28,7 @@ app.whenReady().then(() => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 
+    // Lógica para ler e preparar a planilha
     ipcMain.handle('read-and-prepare-excel', async (event, filePath) => {
         try {
             const workbook = xlsx.readFile(filePath);
@@ -33,24 +36,20 @@ app.whenReady().then(() => {
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
-            // Adiciona a coluna "status" com o valor "Pendente"
             const preparedData = jsonData.map(row => {
                 if (row.telefone) {
                     row.telefone = String(row.telefone).replace(/\s/g, '');
                 }
-                // Garante que o status 'Enviado' não seja sobrescrito
                 if (!row.status || row.status === '') {
                     row.status = 'Pendente';
                 }
                 return row;
             });
 
-            // Cria um novo worksheet com os dados atualizados
             const newWorksheet = xlsx.utils.json_to_sheet(preparedData);
             const newWorkbook = xlsx.utils.book_new();
             xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, sheetName);
 
-            // Salva a planilha com a coluna 'status'
             xlsx.writeFile(newWorkbook, filePath);
 
             return { success: true, data: preparedData };
@@ -61,6 +60,7 @@ app.whenReady().then(() => {
         }
     });
 
+    // Lógica para atualizar o status do envio
     ipcMain.handle('update-status', async (event, { filePath, telefone, status }) => {
         try {
             const workbook = xlsx.readFile(filePath);
@@ -86,6 +86,47 @@ app.whenReady().then(() => {
             console.error('Erro ao atualizar o status:', error);
             return { success: false, error: error.message };
         }
+    });
+
+    // Lógica para iniciar a conexão com o WhatsApp
+    ipcMain.handle('connect-whatsapp', async (event) => {
+        return new Promise((resolve) => {
+            initialize(
+                (qrCode) => {
+                    mainWindow.webContents.send('qr-code', qrCode);
+                    mainWindow.webContents.send('connection-status', 'Conectando...');
+                },
+                () => {
+                    isWhatsappConnected = true;
+                    mainWindow.webContents.send('connection-status', 'Conectado');
+                    resolve({ success: true });
+                },
+                () => {
+                    isWhatsappConnected = false;
+                    mainWindow.webContents.send('connection-status', 'Desconectado');
+                },
+                // Passa o caminho do executável para a função de inicialização
+                process.execPath
+            );
+        });
+    });
+
+    // Lógica para desconectar o WhatsApp
+    ipcMain.handle('disconnect-whatsapp', async () => {
+        const result = await logout();
+        if (result.success) {
+            mainWindow.webContents.send('connection-status', 'Desconectado');
+        }
+        return result;
+    });
+
+    // Lógica para enviar a mensagem
+    ipcMain.handle('send-whatsapp-message', async (event, { number, message }) => {
+        if (!isWhatsappConnected) {
+            return { success: false, error: 'Não há conexão com o WhatsApp.' };
+        }
+        const result = await sendMessage(number, message);
+        return result;
     });
 
 });

@@ -18,6 +18,8 @@
   "homepage": "https://github.com/Guzinn01/disp_whtas#readme",
   "dependencies": {
     "electron": "^38.0.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.33.2",
     "xlsx": "^0.18.5"
   }
 }

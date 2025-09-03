@@ -1,0 +1,207 @@
+/* --- Estilos do Modal Personalizado --- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  transform: scale(0.95);
+  transition: transform 0.3s ease-in-out;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modal-content p {
+  margin: 15px 0;
+  color: #666;
+}
+
+.modal-content button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.modal-content button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.hidden {
+  display: none;
+}
+
+/* --- Seus estilos existentes aqui --- */
+
+/* Estilos gerais */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.container {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px;
+}
+
+header h1 {
+  text-align: center;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+/* Seções da aplicação */
+section {
+  margin-bottom: 30px;
+}
+
+section h2 {
+  color: #555;
+  border-left: 4px solid #007bff;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+/* Área de conexão */
+#connection-area {
+  text-align: center;
+}
+
+#connection-status {
+  padding: 10px;
+  border-radius: 5px;
+  margin: 15px 0;
+  font-weight: bold;
+  color: #fff;
+}
+
+.status-conectado {
+  background-color: #28a745;
+}
+
+.status-desconectado {
+  background-color: #dc3545;
+}
+
+.status-conectando {
+  background-color: #ffc107;
+}
+
+#qr-code-container {
+  margin-top: 20px;
+}
+
+#qr-code-image {
+  max-width: 250px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* Botões */
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  margin: 5px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Formulário de envio */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+/* Área de log */
+#message-log {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 15px;
+  height: 150px;
+  overflow-y: auto;
+  border-radius: 5px;
+}
+
+#message-log p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+#message-log p.info {
+  color: #34495e;
+}
+
+#message-log p.success {
+  color: #28a745;
+}
+
+#message-log p.error {
+  color: #dc3545;
+}
