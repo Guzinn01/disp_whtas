@@ -2,75 +2,103 @@
 <html lang="pt-br">
 
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' 'unsafe-inline';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com;">
     <title>Disparador de WhatsApp</title>
-    <!-- O caminho correto para o CSS é ../assets/css/style.css -->
-    <link rel="stylesheet" href="../src/assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 
 <body>
-    <main class="container">
-        <header>
-            <h1>Disparador de WhatsApp</h1>
-        </header>
-
-        <section id="connection-area">
-            <h2>Status da Conexão</h2>
-            <div id="connection-status" class="status-offline">
-                <p>Desconectado</p>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Disparador</h3>
             </div>
-            <button id="connect-btn">Conectar</button>
-            <button id="disconnect-btn" disabled>Desconectar</button>
-            <div id="qr-code-container">
-                <p id="qr-status-message"></p>
-                <img id="qr-code-image" src="" alt="QR Code para conectar ao WhatsApp" class="hidden">
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-page="config">⚙️ Configurações</a></li>
+                <li><a href="#" class="nav-link" data-page="log">📜 Logs</a></li>
+            </ul>
+            <div class="theme-switcher">
+                <span>Modo Escuro</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
             </div>
-        </section>
+        </nav>
 
-        <section id="configuration-area">
-            <h2>Configurações de Envio</h2>
-            <div class="form-group">
-                <label for="file-upload">Selecione a Lista (Excel):</label>
-                <input type="file" id="file-upload" accept=".xlsx, .xls">
-            </div>
+        <main class="main-content">
+            <!-- Conteúdo das páginas aqui -->
+            <section id="dashboard" class="page active">
+                <header>
+                    <h1>Dashboard de Conexão</h1>
+                </header>
+                <div class="card" id="connection-area">
+                    <h2>Status da Conexão</h2>
+                    <div id="connection-status" class="status-desconectado">
+                        <p>Desconectado</p>
+                    </div>
+                    <div class="button-group">
+                        <button id="connect-btn" class="primary">Conectar WhatsApp</button>
+                        <button id="disconnect-btn" class="danger" disabled>Desconectar</button>
+                    </div>
+                    <div id="qr-code-container">
+                        <p id="qr-status-message"></p>
+                        <img id="qr-code-image" src="" alt="QR Code para conectar ao WhatsApp" class="hidden">
+                    </div>
+                </div>
+            </section>
 
-            <div class="form-group">
-                <label for="message-input">Mensagem a Ser Enviada:</label>
-                <textarea id="message-input" rows="5"
-                    placeholder="Digite sua mensagem aqui. Use {nome} para inserir o nome da pessoa."></textarea>
-            </div>
+            <section id="config" class="page">
+                <header>
+                    <h1>Configurações de Envio</h1>
+                </header>
+                <div class="card" id="configuration-area">
+                    <div class="form-group">
+                        <label for="file-upload">Selecione a Lista (Excel):</label>
+                        <input type="file" id="file-upload" accept=".xlsx, .xls">
+                    </div>
+                    <div class="form-group">
+                        <label for="message-input">Mensagem (use {nome} para personalizar):</label>
+                        <textarea id="message-input" rows="5"
+                            placeholder="Olá {nome}, esta é uma mensagem de teste."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="delay-input">Atraso entre Envios (segundos):</label>
+                        <input type="number" id="delay-input" min="1" value="5">
+                    </div>
+                    <div class="button-group">
+                        <button id="prepare-btn">Preparar Disparo</button>
+                        <button id="start-send-btn" disabled>🚀 Iniciar Disparo</button>
+                    </div>
+                </div>
+            </section>
 
-            <div class="form-group">
-                <label for="delay-input">Atraso entre Mensagens (segundos):</label>
-                <input type="number" id="delay-input" min="1" value="5">
-            </div>
-
-            <button id="prepare-btn">Preparar Disparo</button>
-            <button id="start-send-btn" disabled>Iniciar Disparo</button>
-        </section>
-
-        <section id="log-area">
-            <h2>Log de Mensagens</h2>
-            <div id="message-log">
-                <p>Nenhuma mensagem enviada ainda.</p>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Estrutura do Modal Personalizado -->
-    <div id="custom-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 id="modal-title"></h3>
-            <p id="modal-message"></p>
-            <button id="modal-close-btn">OK</button>
-        </div>
+            <section id="log" class="page">
+                <header>
+                    <h1>Log de Mensagens</h1>
+                </header>
+                <div class="card" id="log-area">
+                    <h2>Acompanhamento em Tempo Real</h2>
+                    <div id="message-log">
+                        <p class="initial">Aguardando início dos envios...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <!-- O caminho correto para o JS é ../assets/js/renderer.js -->
-    <script src="../src/assets/js/renderer.js"></script>
+    <!-- Estrutura do Modal (ainda comentada) -->
+
+    <!-- BIBLIOTECA QRCODE ADICIONADA -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="./assets/js/render.js"></script>
 </body>
 
 </html>

@@ -1,5 +1,323 @@
-/* --- Estilos do Modal Personalizado --- */
+/* --- VARIÁVEIS DE TEMA (TEMA CLARO E ESCURO) --- */
+:root {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --danger-color: #ef4444;
+  --danger-hover: #dc2626;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --font-family: "Poppins", sans-serif;
 
+  /* Tema Claro (Padrão) */
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --bg-sidebar: #1f2937;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-sidebar: #f9fafb;
+  --border-color: #e5e7eb;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode {
+  /* Tema Escuro */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-sidebar: #0f172a;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+}
+
+/* --- ESTILOS GERAIS --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+  overflow: hidden; /* Evita barras de rolagem indesejadas */
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* --- BARRA DE NAVEGAÇÃO LATERAL (SIDEBAR) --- */
+.sidebar {
+  width: 240px;
+  background-color: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 10px;
+  transition: background-color 0.3s;
+}
+
+.sidebar-header {
+  padding: 0 10px 20px 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-links {
+  list-style-type: none;
+  margin-top: 20px;
+  flex-grow: 1; /* Empurra o switcher para baixo */
+}
+
+.nav-link {
+  display: block;
+  color: var(--text-sidebar);
+  text-decoration: none;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* --- CONTEÚDO PRINCIPAL --- */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto; /* Permite rolar o conteúdo se for maior que a tela */
+}
+
+.page {
+  display: none; /* Esconde todas as páginas por padrão */
+}
+
+.page.active {
+  display: block; /* Mostra apenas a página ativa */
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  transition: background-color 0.3s;
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* --- COMPONENTES (BOTÕES, INPUTS, ETC) --- */
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button.primary,
+#modal-close-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+button.primary:hover {
+  background-color: var(--primary-hover);
+}
+
+button.danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+button.danger:hover {
+  background-color: var(--danger-hover);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: var(--font-family);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* --- ÁREA DE CONEXÃO E QR CODE --- */
+#connection-area {
+  text-align: center;
+}
+#connection-status {
+  padding: 12px;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-weight: 600;
+  color: #fff;
+}
+
+.status-conectado {
+  background-color: var(--success-color);
+}
+.status-desconectado {
+  background-color: var(--danger-color);
+}
+.status-conectando {
+  background-color: var(--warning-color);
+  color: #111827 !important;
+}
+
+#qr-code-container {
+  margin-top: 20px;
+}
+#qr-code-image {
+  max-width: 250px;
+  height: auto;
+  border: 4px solid var(--border-color);
+  border-radius: 8px;
+}
+.hidden {
+  display: none;
+}
+
+/* --- LOG DE MENSAGENS --- */
+#message-log {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  height: 250px;
+  overflow-y: auto;
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+#message-log p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+#message-log p.info {
+  color: var(--text-secondary);
+}
+#message-log p.success {
+  color: var(--success-color);
+}
+#message-log p.error {
+  color: var(--danger-color);
+}
+
+/* --- SELETOR DE TEMA (DARK MODE) --- */
+.theme-switcher {
+  padding: 10px;
+  text-align: center;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  margin-left: 10px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+}
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+.slider.round {
+  border-radius: 28px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* --- MODAL --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -12,196 +330,22 @@
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
-  background-color: #fff;
+  background-color: var(--bg-secondary);
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   text-align: center;
   max-width: 400px;
   width: 90%;
-  transform: scale(0.95);
-  transition: transform 0.3s ease-in-out;
 }
-
 .modal-content h3 {
   margin-top: 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-primary);
 }
-
 .modal-content p {
   margin: 15px 0;
-  color: #666;
+  color: var(--text-secondary);
 }
 
-.modal-content button {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
-}
-
-.modal-content button:hover {
-  background-color: #0056b3;
-  transform: translateY(-2px);
-}
-
-.hidden {
-  display: none;
-}
-
-/* --- Seus estilos existentes aqui --- */
-
-/* Estilos gerais */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f2f5;
-  margin: 0;
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-}
-
-.container {
-  background-color: #ffffff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 700px;
-}
-
-header h1 {
-  text-align: center;
-  color: #333;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-/* Seções da aplicação */
-section {
-  margin-bottom: 30px;
-}
-
-section h2 {
-  color: #555;
-  border-left: 4px solid #007bff;
-  padding-left: 10px;
-  margin-bottom: 15px;
-}
-
-/* Área de conexão */
-#connection-area {
-  text-align: center;
-}
-
-#connection-status {
-  padding: 10px;
-  border-radius: 5px;
-  margin: 15px 0;
-  font-weight: bold;
-  color: #fff;
-}
-
-.status-conectado {
-  background-color: #28a745;
-}
-
-.status-desconectado {
-  background-color: #dc3545;
-}
-
-.status-conectando {
-  background-color: #ffc107;
-}
-
-#qr-code-container {
-  margin-top: 20px;
-}
-
-#qr-code-image {
-  max-width: 250px;
-  height: auto;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-/* Botões */
-button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
-  margin: 5px;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Formulário de envio */
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #333;
-  font-weight: bold;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1rem;
-}
-
-/* Área de log */
-#message-log {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  padding: 15px;
-  height: 150px;
-  overflow-y: auto;
-  border-radius: 5px;
-}
-
-#message-log p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-#message-log p.info {
-  color: #34495e;
-}
-
-#message-log p.success {
-  color: #28a745;
-}
-
-#message-log p.error {
-  color: #dc3545;
-}

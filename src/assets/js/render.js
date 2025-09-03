@@ -1,208 +1,203 @@
-// renderer.js
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('AVISO: A versão do render.js com a correção do path do arquivo foi carregada.');
 
-// Referências para os elementos do DOM
-const connectBtn = document.getElementById('connect-btn');
-const disconnectBtn = document.getElementById('disconnect-btn');
-const connectionStatusDiv = document.getElementById('connection-status');
-const connectionStatusText = connectionStatusDiv.querySelector('p');
-const qrCodeContainer = document.getElementById('qr-code-container');
-const qrStatusMessage = document.getElementById('qr-status-message');
-const qrCodeImage = document.getElementById('qr-code-image');
+    // --- REFERÊNCIAS AOS ELEMENTOS DO DOM ---
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const connectionStatusDiv = document.getElementById('connection-status');
+    const connectionStatusText = connectionStatusDiv.querySelector('p');
+    const qrCodeContainer = document.getElementById('qr-code-container');
+    const qrStatusMessage = document.getElementById('qr-status-message');
+    const qrCodeImage = document.getElementById('qr-code-image');
 
-const prepareBtn = document.getElementById('prepare-btn');
-const startSendBtn = document.getElementById('start-send-btn');
-const fileInput = document.getElementById('file-upload');
-const messageInput = document.getElementById('message-input');
-const delayInput = document.getElementById('delay-input');
-const messageLog = document.getElementById('message-log');
+    const prepareBtn = document.getElementById('prepare-btn');
+    const startSendBtn = document.getElementById('start-send-btn');
+    const fileInput = document.getElementById('file-upload');
+    const messageInput = document.getElementById('message-input');
+    const delayInput = document.getElementById('delay-input');
+    const messageLog = document.getElementById('message-log');
 
-// Referências para o modal
-const modalOverlay = document.getElementById('custom-modal');
-const modalTitle = document.getElementById('modal-title');
-const modalMessage = document.getElementById('modal-message');
-const modalCloseBtn = document.getElementById('modal-close-btn');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const pages = document.querySelectorAll('.page');
+    const themeToggle = document.getElementById('theme-toggle');
 
-let excelFilePath = null;
+    // A variável global excelFilePath foi removida, pois não é mais necessária
 
-// Funções para gerenciar o estado da UI de conexão
-const setConnectionStatus = (status) => {
-    connectionStatusText.textContent = status;
-    connectionStatusDiv.className = `status-${status.toLowerCase().replace(' ', '-')}`;
-};
+    // --- FUNÇÕES AUXILIARES ---
+    const setConnectionStatus = (status) => {
+        connectionStatusText.textContent = status;
+        connectionStatusDiv.className = `status-${status.toLowerCase().replace(' ', '-')}`;
+    };
 
-// Funções para exibir o modal personalizado
-const showModal = (title, message) => {
-    modalTitle.textContent = title;
-    modalMessage.textContent = message;
-    modalOverlay.classList.remove('hidden');
-};
+    const showModal = (title, message) => {
+        console.error(`MODAL: ${title} - ${message}`);
+    };
 
-const hideModal = () => {
-    modalOverlay.classList.add('hidden');
-};
-
-modalCloseBtn.addEventListener('click', hideModal);
-
-// Evento de clique no botão "Conectar"
-connectBtn.addEventListener('click', async () => {
-    setConnectionStatus('Conectando...');
-    connectBtn.disabled = true;
-
-    qrStatusMessage.textContent = 'Gerando QR Code...';
-    qrCodeImage.classList.remove('hidden');
-
-    // Chama o backend para iniciar a conexão com o WhatsApp
-    await window.electronAPI.connectWhatsapp();
-});
-
-// Evento de clique no botão "Desconectar"
-disconnectBtn.addEventListener('click', async () => {
-    logMessage('Desconectando...', 'info');
-    disconnectBtn.disabled = true;
-    const result = await window.electronAPI.disconnectWhatsapp();
-    if (result.success) {
-        logMessage('Desconectado com sucesso.', 'success');
-        connectBtn.disabled = false;
-        disconnectBtn.disabled = true;
-    } else {
-        logMessage(`Erro ao desconectar: ${result.error}`, 'error');
-        disconnectBtn.disabled = false;
+    function logMessage(text, type = 'info') {
+        const initialMessage = messageLog.querySelector('.initial');
+        if (initialMessage) initialMessage.remove();
+        const p = document.createElement('p');
+        p.textContent = text;
+        p.classList.add(type);
+        messageLog.appendChild(p);
+        messageLog.scrollTop = messageLog.scrollHeight;
     }
-});
 
-// Eventos de recebimento do QR Code e status de conexão do backend
-window.electronAPI.onQrCode((qr) => {
-    qrStatusMessage.textContent = 'Por favor, escaneie o QR Code com seu celular:';
-    qrCodeImage.src = `data:image/png;base64,${qr}`;
-    qrCodeImage.classList.remove('hidden');
-});
+    // --- LÓGICA DE NAVEGAÇÃO E TEMA ---
+    const changePage = (pageId) => {
+        pages.forEach(page => page.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.page === pageId) link.classList.add('active');
+        });
+    };
 
-window.electronAPI.onConnectionStatus((status) => {
-    setConnectionStatus(status);
-    if (status === 'Conectado') {
+    navLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            changePage(link.dataset.page);
+        });
+    });
+
+    themeToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode');
+    });
+
+    // --- EVENT LISTENERS PRINCIPAIS ---
+    connectBtn.addEventListener('click', async () => {
+        setConnectionStatus('Conectando...');
         connectBtn.disabled = true;
-        disconnectBtn.disabled = false;
+        qrStatusMessage.textContent = 'Aguardando geração do QR Code...';
         qrCodeImage.classList.add('hidden');
-        qrStatusMessage.textContent = 'Você está conectado!';
-    } else {
-        connectBtn.disabled = false;
+        await window.electronAPI.connectWhatsapp();
+    });
+
+    disconnectBtn.addEventListener('click', async () => {
+        logMessage('Desconectando...', 'info');
         disconnectBtn.disabled = true;
-        qrCodeImage.classList.add('hidden');
-        qrStatusMessage.textContent = '';
-
-        // Exibe o modal quando a conexão for perdida (automática ou manual)
-        if (status === 'Desconectado') {
-            showModal('Conexão Perdida', 'A conexão com o WhatsApp foi perdida ou desconectada manualmente.');
+        const result = await window.electronAPI.disconnectWhatsapp();
+        if (result.success) {
+            logMessage('Desconectado com sucesso.', 'success');
+        } else {
+            logMessage(`Erro ao desconectar: ${result.error}`, 'error');
+            disconnectBtn.disabled = false;
         }
-    }
-});
+    });
 
-// Evento de clique no botão de "Preparar Disparo"
-prepareBtn.addEventListener('click', async () => {
-    if (!fileInput.files.length) {
-        showModal('Erro', 'Por favor, selecione um arquivo Excel.');
-        return;
-    }
-
-    excelFilePath = fileInput.files[0].path;
-    logMessage('Preparando a planilha. Por favor, aguarde...');
-
-    const result = await window.electronAPI.readAndPrepareExcel(excelFilePath);
-
-    if (result.success) {
-        logMessage('Planilha preparada com sucesso! Status "Pendente" adicionado.', 'success');
-        startSendBtn.disabled = false;
-        prepareBtn.disabled = true;
-    } else {
-        showModal('Erro ao Preparar', `Erro ao preparar a planilha: ${result.error}`);
-    }
-});
-
-// Evento de clique no botão de "Iniciar Disparo"
-startSendBtn.addEventListener('click', async () => {
-    const message = messageInput.value;
-    const delay = parseInt(delayInput.value) * 1000;
-
-    if (!message.trim()) {
-        showModal('Erro', 'Por favor, digite a mensagem a ser enviada.');
-        return;
-    }
-
-    if (!excelFilePath) {
-        showModal('Erro', 'Por favor, prepare a planilha antes de iniciar o disparo.');
-        return;
-    }
-
-    // Desabilita os botões para evitar cliques durante o disparo
-    startSendBtn.disabled = true;
-    prepareBtn.disabled = true;
-    messageInput.disabled = true;
-    delayInput.disabled = true;
-    fileInput.disabled = true;
-
-    logMessage('Iniciando o disparo de mensagens. Não feche esta janela.', 'info');
-
-    try {
-        const result = await window.electronAPI.readAndPrepareExcel(excelFilePath);
-
-        if (!result.success) {
-            logMessage(`Erro ao ler a planilha: ${result.error}`, 'error');
-            return;
-        }
-
-        const pendingContacts = result.data.filter(contact => contact.status === 'Pendente');
-
-        if (pendingContacts.length === 0) {
-            logMessage('Nenhum contato com status "Pendente" encontrado.', 'info');
-            return;
-        }
-
-        for (const contact of pendingContacts) {
-            const personalizedMessage = message.replace(/{nome}/g, contact.nome);
-            logMessage(`Enviando mensagem para ${contact.nome}...`, 'info');
-
-            const sendResult = await window.electronAPI.sendWhatsappMessage({
-                number: contact.telefone,
-                message: personalizedMessage
-            });
-
-            if (sendResult.success) {
-                logMessage(`Mensagem enviada para ${contact.nome}.`, 'success');
-                await window.electronAPI.updateStatus({
-                    filePath: excelFilePath,
-                    telefone: contact.telefone,
-                    status: 'Enviado'
-                });
-            } else {
-                logMessage(`Falha ao enviar para ${contact.nome}: ${sendResult.error}`, 'error');
-                await window.electronAPI.updateStatus({
-                    filePath: excelFilePath,
-                    telefone: contact.telefone,
-                    status: 'Falha'
-                });
+    // --- EVENTOS RECEBIDOS DO BACKEND (main.js) ---
+    window.electronAPI.onQrCode((qr) => {
+        qrStatusMessage.textContent = 'Por favor, escaneie o QR Code com seu celular:';
+        QRCode.toDataURL(qr, (err, url) => {
+            if (err) {
+                console.error('Erro ao gerar QR Code:', err);
+                qrStatusMessage.textContent = 'Erro ao gerar QR Code. Tente novamente.';
+                return;
             }
+            qrCodeImage.src = url;
+            qrCodeImage.classList.remove('hidden');
+        });
+    });
 
-            await new Promise(resolve => setTimeout(resolve, delay));
+    let wasConnected = false;
+    window.electronAPI.onConnectionStatus((status) => {
+        setConnectionStatus(status);
+        if (status === 'Conectado') {
+            wasConnected = true;
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+            qrCodeContainer.classList.add('hidden');
+            qrStatusMessage.textContent = 'Você está conectado!';
+        } else if (status === 'Conectando...') {
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = true;
+        } else { // Desconectado
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+            qrCodeContainer.classList.remove('hidden');
+            qrCodeImage.classList.add('hidden');
+            qrStatusMessage.textContent = '';
+            if (wasConnected) {
+                console.error('CONEXÃO PERDIDA: A conexão com o WhatsApp foi perdida.');
+                wasConnected = false;
+            }
         }
+    });
 
-        logMessage('Disparo concluído! Todas as mensagens pendentes foram enviadas.', 'success');
+    // --- LÓGICA DE DISPARO ---
 
-    } catch (error) {
-        logMessage(`Ocorreu um erro no processo de disparo: ${error.message}`, 'error');
-    } finally {
-        startSendBtn.disabled = false;
-        prepareBtn.disabled = false;
-        messageInput.disabled = false;
-        delayInput.disabled = false;
-        fileInput.disabled = false;
-    }
+    // ****** ESTA É A PARTE QUE FOI ALTERADA ******
+    prepareBtn.addEventListener('click', async () => {
+        if (!fileInput.files.length) {
+            showModal('Erro', 'Por favor, selecione um arquivo Excel.');
+            return;
+        }
+        // Pega o caminho diretamente do elemento de input
+        const filePath = fileInput.files[0].path;
+        logMessage('Preparando a planilha...', 'info');
+
+        // Envia o caminho para o main.js
+        const result = await window.electronAPI.readAndPrepareExcel(filePath);
+
+        if (result.success) {
+            logMessage('Planilha preparada com sucesso!', 'success');
+            startSendBtn.disabled = false;
+            prepareBtn.disabled = true;
+        } else {
+            showModal('Erro ao Preparar', `Erro: ${result.error}`);
+        }
+    });
+
+    startSendBtn.addEventListener('click', async () => {
+        const message = messageInput.value;
+        const delay = parseInt(delayInput.value) * 1000;
+        if (!message.trim()) {
+            showModal('Erro', 'Por favor, digite a mensagem a ser enviada.');
+            return;
+        }
+        // Pega o caminho novamente para garantir que está correto
+        if (!fileInput.files.length) {
+            showModal('Erro', 'Nenhum arquivo selecionado. Prepare a planilha primeiro.');
+            return;
+        }
+        const filePath = fileInput.files[0].path;
+
+        startSendBtn.disabled = true;
+        logMessage('Iniciando o disparo...', 'info');
+        try {
+            // Usa a variável local 'filePath' em vez da global
+            const result = await window.electronAPI.readAndPrepareExcel(filePath);
+            if (!result.success) {
+                logMessage(`Erro ao ler a planilha: ${result.error}`, 'error');
+                return;
+            }
+            const pendingContacts = result.data.filter(contact => contact.status === 'Pendente');
+            if (pendingContacts.length === 0) {
+                logMessage('Nenhum contato pendente encontrado.', 'info');
+                return;
+            }
+            for (const contact of pendingContacts) {
+                const personalizedMessage = message.replace(/{nome}/g, contact.nome);
+                logMessage(`Enviando para ${contact.nome}...`, 'info');
+                const sendResult = await window.electronAPI.sendWhatsappMessage({ number: contact.telefone, message: personalizedMessage });
+                if (sendResult.success) {
+                    logMessage(`Mensagem enviada para ${contact.nome}.`, 'success');
+                    await window.electronAPI.updateStatus({ filePath: filePath, telefone: contact.telefone, status: 'Enviado' });
+                } else {
+                    logMessage(`Falha ao enviar para ${contact.nome}: ${sendResult.error}`, 'error');
+                    await window.electronAPI.updateStatus({ filePath: filePath, telefone: contact.telefone, status: 'Falha' });
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            logMessage('Disparo concluído!', 'success');
+        } catch (error) {
+            logMessage(`Ocorreu um erro no processo de disparo: ${error.message}`, 'error');
+        } finally {
+            startSendBtn.disabled = false;
+        }
+    });
+
+    // --- INICIALIZAÇÃO ---
+    changePage('dashboard');
 });
 
-// Função para registrar mensagens no log da interface
-function logMessage(text, type = 'info') {
-    const p = document.createElement('p');
-    p.textContent = text;
-    p.classList.add(type);
-    messageLog.appendChild(p);
-    messageLog.scrollTop = messageLog.scrollHeight;
-}

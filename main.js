@@ -3,10 +3,15 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const xlsx = require('xlsx');
+const sqlite3 = require('sqlite3').verbose();
 const { initialize, sendMessage, logout } = require('./src/whats');
 
 let mainWindow;
 let isWhatsappConnected = false;
+
+// O banco de dados ainda está aqui, pronto para quando voltarmos a ele.
+const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -18,6 +23,16 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js')
         }
     });
+
+    // --- LINHAS ADICIONADAS PARA DEBUG ---
+    // Força a limpeza do cache antes de carregar a página
+    mainWindow.webContents.session.clearCache(() => {
+        console.log('Cache limpo.');
+    });
+    // Abre as ferramentas de desenvolvedor (console) automaticamente
+    mainWindow.webContents.openDevTools();
+    // --- FIM DAS LINHAS ADICIONADAS ---
+
     mainWindow.loadFile(path.join(__dirname, 'src/index.html'));
 }
 
@@ -104,9 +119,7 @@ app.whenReady().then(() => {
                 () => {
                     isWhatsappConnected = false;
                     mainWindow.webContents.send('connection-status', 'Desconectado');
-                },
-                // Passa o caminho do executável para a função de inicialização
-                process.execPath
+                }
             );
         });
     });

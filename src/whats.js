@@ -7,7 +7,7 @@ let isReady = false;
 
 module.exports = {
     // Função para iniciar o cliente do WhatsApp e gerar o QR Code
-    initialize: (sendQrCodeToRenderer, onReady, onDisconnected, executablePath) => {
+    initialize: (sendQrCodeToRenderer, onReady, onDisconnected) => {
         if (client && isReady) {
             onReady();
             return;
@@ -17,10 +17,8 @@ module.exports = {
             authStrategy: new LocalAuth({
                 clientId: 'electron-whatsapp'
             }),
-            puppeteer: {
-                // Usa o caminho correto do executável do navegador que veio do main.js
-                executablePath: executablePath
-            }
+            // A seção 'puppeteer' foi removida para deixar a biblioteca gerenciar o navegador.
+            // Isso geralmente resolve problemas de compatibilidade e geração de QR Code.
         });
 
         // Evento: QR Code gerado
@@ -40,6 +38,7 @@ module.exports = {
         client.on('disconnected', (reason) => {
             console.log('Cliente desconectado', reason);
             isReady = false;
+            client = null; // Limpa a instância do cliente para permitir uma nova conexão
             onDisconnected(reason); // Notifica o front-end sobre a desconexão
         });
 
@@ -51,8 +50,7 @@ module.exports = {
         if (client) {
             try {
                 await client.logout();
-                client = null;
-                isReady = false;
+                // O evento 'disconnected' cuidará de limpar as variáveis
                 console.log('Cliente do WhatsApp desconectado com sucesso.');
                 return { success: true };
             } catch (error) {
@@ -69,13 +67,18 @@ module.exports = {
             return { success: false, error: 'Cliente do WhatsApp não está pronto.' };
         }
         try {
-            const chat = await client.getChatById(number + '@c.us');
-            if (chat) {
-                await chat.sendMessage(message);
-                return { success: true };
-            } else {
-                return { success: false, error: 'Chat não encontrado.' };
+            // Adiciona o DDI 55 (Brasil) se não estiver presente e formata o número
+            const sanitizedNumber = number.startsWith('55') ? number : `55${number}`;
+            const chatId = `${sanitizedNumber}@c.us`;
+
+            const isRegistered = await client.isRegisteredUser(chatId);
+            if (!isRegistered) {
+                return { success: false, error: 'O número não está registrado no WhatsApp.' };
             }
+
+            await client.sendMessage(chatId, message);
+            return { success: true };
+
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
             return { success: false, error: error.message };
