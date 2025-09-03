@@ -20,8 +20,8 @@
                 <h3>Disparador</h3>
             </div>
             <ul class="nav-links">
-                <li><a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a></li>
-                <li><a href="#" class="nav-link" data-page="config">⚙️ Configurações</a></li>
+                <li><a href="#" class="nav-link active" data-page="dashboard">📱 Contas</a></li>
+                <li><a href="#" class="nav-link" data-page="config">⚙️ Disparo</a></li>
                 <li><a href="#" class="nav-link" data-page="log">📜 Logs</a></li>
             </ul>
             <div class="theme-switcher">
@@ -34,29 +34,66 @@
         <main class="main-content">
             <section id="dashboard" class="page active">
                 <header>
-                    <h1>Dashboard de Conexão</h1>
+                    <h1>Gerenciador de Contas</h1>
                 </header>
-                <div class="card" id="connection-area">
-                    <h2>Status da Conexão</h2>
-                    <div id="connection-status" class="status-desconectado">
-                        <p>Desconectado</p>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Contas Salvas</h2>
+                        <button id="add-session-btn" class="primary">Adicionar Nova Conta</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome da Conta</th>
+                                    <th>Número</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessions-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card hidden" id="add-session-form-container">
+                    <h2>Nome da Nova Conta</h2>
+                    <div class="form-group-inline">
+                        <div class="form-group">
+                            <label for="delay-min-input">Atraso Mínimo (segundos):</label>
+                            <input type="number" id="delay-min-input" min="1" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="delay-max-input">Atraso Máximo (segundos):</label>
+                            <input type="number" id="delay-max-input" min="1" value="10">
+                        </div>
                     </div>
                     <div class="button-group">
-                        <button id="connect-btn" class="primary">Conectar WhatsApp</button>
-                        <button id="disconnect-btn" class="danger" disabled>Desconectar</button>
+                        <button id="confirm-add-session-btn" class="primary">Salvar e Gerar QR Code</button>
+                        <button id="cancel-add-form-btn" class="danger">Cancelar</button>
                     </div>
-                    <div id="qr-code-container">
-                        <p id="qr-status-message"></p>
-                        <img id="qr-code-image" src="" alt="QR Code" class="hidden">
+                </div>
+
+                <div class="card hidden" id="new-session-qr-container">
+                    <h2>Conectar Nova Conta</h2>
+                    <p id="qr-status-message">Aguardando QR Code...</p>
+                    <div id="qr-code-wrapper">
                     </div>
+                    <button id="cancel-add-session-btn" class="danger">Cancelar</button>
                 </div>
             </section>
 
             <section id="config" class="page">
                 <header>
-                    <h1>Configurações de Envio</h1>
+                    <h1>Configurações de Disparo</h1>
                 </header>
                 <div class="card" id="configuration-area">
+                    <div class="form-group">
+                        <label for="session-selector">Usar a conta:</label>
+                        <select id="session-selector">
+                            <option value="">Nenhuma conta conectada</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="message-input">Mensagem (use {nome} para personalizar):</label>
                         <textarea id="message-input" rows="5"
@@ -69,6 +106,8 @@
                     <div class="button-group">
                         <button id="prepare-btn">Carregar e Preparar Planilha</button>
                         <button id="start-send-btn" disabled>🚀 Iniciar Disparo</button>
+                        <button id="pause-send-btn" class="warning hidden">⏸ Pausar Disparo</button>
+                        <button id="cancel-send-btn" class="danger hidden">❌ Cancelar Disparo</button>
                     </div>
                 </div>
             </section>
