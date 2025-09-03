@@ -10,8 +10,6 @@ let mainWindow;
 let isWhatsappConnected = false;
 let db;
 
-// --- CAMINHO DO BANCO DE DADOS ALTERADO ---
-// Agora ele salvará o arquivo dentro da pasta 'src/data' do seu projeto.
 const dbPath = path.join(__dirname, 'src', 'data', 'database.sqlite');
 
 async function openDb() {
@@ -48,7 +46,6 @@ app.whenReady().then(async () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 
-    // O restante do código permanece o mesmo
     ipcMain.handle('prepare-and-read-excel', async () => {
         try {
             const result = await dialog.showOpenDialog(mainWindow, {
@@ -64,20 +61,29 @@ app.whenReady().then(async () => {
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
+            console.log(`[XLSX] ${jsonData.length} linhas lidas da planilha.`);
+
             await db.exec('DROP TABLE IF EXISTS contacts');
             await db.exec('CREATE TABLE contacts (name TEXT, phone TEXT, status TEXT)');
 
             const stmt = await db.prepare('INSERT INTO contacts (name, phone, status) VALUES (?, ?, ?)');
+            let insertedCount = 0;
             for (const row of jsonData) {
-                if (row.Nome && row.Telefone) {
-                    const sanitizedPhone = String(row.Telefone).replace(/\D/g, '');
-                    await stmt.run(row.Nome, sanitizedPhone, 'Preparado');
+                // CORREÇÃO: Usando 'row.nome' e 'row.telefone' com letras minúsculas
+                if (row.nome && row.telefone) {
+                    const sanitizedPhone = String(row.telefone).replace(/\D/g, '');
+                    // CORREÇÃO: Usando 'row.nome' e passando o telefone sanitizado
+                    await stmt.run(row.nome, sanitizedPhone, 'Preparado');
+                    insertedCount++;
+                } else {
+                    console.warn('[DB] Linha ignorada por falta de Nome ou Telefone:', row);
                 }
             }
             await stmt.finalize();
 
-            console.log(`[DB] Gravação de ${jsonData.length} contatos concluída.`);
-            return { success: true, message: `${jsonData.length} contatos carregados para o banco de dados.` };
+            console.log(`[DB] ${insertedCount} de ${jsonData.length} contatos gravados com sucesso.`);
+            return { success: true, message: `${insertedCount} contatos carregados para o banco de dados.` };
+
         } catch (error) {
             console.error('Erro no processo de preparação do arquivo:', error);
             return { success: false, error: error.message };
