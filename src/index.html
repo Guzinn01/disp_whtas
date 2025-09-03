@@ -58,15 +58,9 @@
 
                 <div class="card hidden" id="add-session-form-container">
                     <h2>Nome da Nova Conta</h2>
-                    <div class="form-group-inline">
-                        <div class="form-group">
-                            <label for="delay-min-input">Atraso Mínimo (segundos):</label>
-                            <input type="number" id="delay-min-input" min="1" value="5">
-                        </div>
-                        <div class="form-group">
-                            <label for="delay-max-input">Atraso Máximo (segundos):</label>
-                            <input type="number" id="delay-max-input" min="1" value="10">
-                        </div>
+                    <div class="form-group">
+                        <label for="session-name-input">Nome da Conta:</label>
+                        <input type="text" id="session-name-input" placeholder="Ex: Conta Principal">
                     </div>
                     <div class="button-group">
                         <button id="confirm-add-session-btn" class="primary">Salvar e Gerar QR Code</button>
