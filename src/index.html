@@ -94,8 +94,12 @@
                             placeholder="Olá {nome}, esta é uma mensagem de teste."></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="delay-input">Atraso entre Envios (segundos):</label>
+                        <label for="delay-input">Atraso MÍNIMO entre Envios (segundos):</label>
                         <input type="number" id="delay-input" min="1" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="delay-max-input">Atraso MÁXIMO entre Envios (segundos):</label>
+                        <input type="number" id="delay-max-input" min="1" value="8">
                     </div>
                     <div class="button-group">
                         <button id="prepare-btn">Carregar e Preparar Planilha</button>

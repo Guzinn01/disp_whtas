@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrStatusMessage = document.getElementById('qr-status-message');
     const cancelAddSessionBtn = document.getElementById('cancel-add-session-btn');
     const sessionSelector = document.getElementById('session-selector');
-    const delayMinInput = document.getElementById('delay-min-input');
+    // CORREÇÃO AQUI: O ID do elemento no HTML é 'delay-input'
+    const delayMinInput = document.getElementById('delay-input');
     const delayMaxInput = document.getElementById('delay-max-input');
     const pauseSendBtn = document.getElementById('pause-send-btn');
     const cancelSendBtn = document.getElementById('cancel-send-btn');
